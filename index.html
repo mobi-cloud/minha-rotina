@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="minha rotina">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#7A7F8C">
+<title>minha rotina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --court:#7A7F8C; --court-ink:#FFFFFF; --pink:#FFCFDD; --pink-ink:#3B2530;
+  --bg:#F4F4F6; --card:#FFFFFF; --ink:#22242B; --muted:#6C6F7A; --line:#E3E4E9; --soft:#ECEDF1; --danger:#D2432F;
+  --along:#4F86A8; --mob:#8A73C4; --rolo:#D9577F;
+  --font:"DM Sans", system-ui, sans-serif; --display:"DM Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --court:#4A4E59; --bg:#17181C; --card:#22242A; --ink:#F0F1F4; --muted:#A4A7B2; --line:#33363E; --soft:#2B2D34;
+    --along:#7FB0CF; --mob:#AE9BE0; --rolo:#F08AAA; --danger:#FF7E6A;
+  }
+}
+:root[data-theme="dark"]{
+  --court:#4A4E59; --bg:#17181C; --card:#22242A; --ink:#F0F1F4; --muted:#A4A7B2; --line:#33363E; --soft:#2B2D34;
+  --along:#7FB0CF; --mob:#AE9BE0; --rolo:#F08AAA; --danger:#FF7E6A;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+
+/* Topo em forma de quadra */
+.hero{background:var(--court);color:var(--court-ink);padding:calc(26px + env(safe-area-inset-top,0px)) 18px 26px;position:relative;overflow:hidden}
+.hero::before,.hero::after{content:"";position:absolute;border:0 solid rgba(255,255,255,.4)}
+.hero::before{left:-10px;right:-10px;bottom:14px;border-top-width:2px}
+.hero::after{left:50%;top:0;bottom:14px;border-left-width:2px}
+.hero-in{max-width:640px;margin:0 auto;position:relative}
+h1{margin:0;font-family:var(--display);font-size:clamp(2.6rem,12vw,3.4rem);font-weight:700;letter-spacing:-.045em;line-height:1}
+.hero small{display:block;margin-top:4px;opacity:.9;font-size:.95rem}
+
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px calc(170px + env(safe-area-inset-bottom,0px))}
+.filters{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:7px 13px;font-size:.88rem;font-weight:600;display:flex;align-items:center;gap:7px;cursor:pointer}
+.chip i{width:9px;height:9px;border-radius:50%;display:block}
+.chip[aria-pressed="true"]{border-color:var(--court);background:var(--court);color:#fff}
+.progress{display:flex;align-items:center;gap:12px;margin:0 0 16px;color:var(--muted);font-size:.92rem}
+.bar{flex:1;height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar b{display:block;height:100%;background:var(--court);width:0;transition:width .3s}
+.linkbtn{background:none;border:0;padding:6px;cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.ex{background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.ex.done{opacity:.55}
+.media{background:var(--soft);aspect-ratio:4/3;display:grid;place-items:center;color:var(--muted);font-size:.9rem}
+.media img,.media video,.media iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
+.ex-body{padding:12px 14px 10px}
+.ex-head{display:flex;align-items:flex-start;gap:12px}
+.ex-head .t{flex:1;min-width:0}
+.tag{display:inline-block;font-size:.74rem;font-weight:700;padding:3px 9px;border-radius:8px;color:#fff;margin-bottom:6px}
+.tag.alongamento{background:var(--along)} .tag.mobilidade{background:var(--mob)} .tag.rolo{background:var(--rolo)}
+.ex h2{margin:0;font-size:1.15rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.ex .desc{margin:6px 0 0;white-space:pre-wrap;color:var(--muted);overflow-wrap:anywhere}
+.check{flex:none;width:30px;height:30px;border-radius:9px;border:2px solid var(--line);background:none;display:grid;place-items:center;color:transparent;cursor:pointer}
+.check svg{width:16px;height:16px}
+.ex.done .check{background:var(--court);border-color:var(--court);color:#fff}
+.ex-foot{display:flex;justify-content:flex-end;gap:4px;margin-top:4px}
+
+.entry{background:var(--card);border-radius:22px;border:1px solid var(--line);padding:16px 16px 10px}
+.entry .wk{font-size:.82rem;font-weight:700;color:var(--muted)}
+.entry h2{margin:2px 0 10px;font-size:1.25rem;font-weight:700;letter-spacing:-.01em;line-height:1.15;overflow-wrap:anywhere}
+.entry ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.entry li{display:flex;gap:10px;align-items:flex-start;overflow-wrap:anywhere}
+.entry li::before{content:"";flex:none;width:9px;height:9px;border-radius:3px;background:var(--pink);box-shadow:0 0 0 2px var(--court);margin-top:8px}
+.entry .none{color:var(--muted);font-size:.95rem}
+
+.empty{text-align:center;padding:34px 22px;border:2px dashed var(--line);border-radius:14px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:6px}
+
+/* Botão e abas embaixo */
+.add{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(92px + env(safe-area-inset-bottom,0px));border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:1rem;background:var(--pink);color:var(--pink-ink);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.16);white-space:nowrap;z-index:6}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+.tabs-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tabs button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.82rem;font-weight:600;padding:6px 0;cursor:pointer}
+.tabs svg{width:25px;height:25px}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:800}
+.tabs svg{box-sizing:content-box;padding:3px 14px;border-radius:10px}
+.tabs button[aria-selected="true"] svg{background:var(--pink);color:var(--pink-ink)}
+
+/* Formulários */
+dialog{border:0;border-radius:18px;padding:0;width:min(560px,calc(100% - 20px));max-height:calc(100% - 40px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(23,24,28,.55)}
+form{padding:22px}
+form h3{margin:0;font-size:1.45rem;font-weight:700;letter-spacing:-.02em}
+label,.lbl{display:block;font-weight:600;margin:18px 0 8px;font-size:.95rem}
+input[type=text],textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.types button[aria-pressed="true"]{background:var(--court);border-color:var(--court);color:#fff}
+.types button{border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:12px 4px;font-weight:700;font-size:.9rem;cursor:pointer}
+.where{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.where button{border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:11px;font-weight:700;cursor:pointer}
+.where button[aria-pressed="true"]{background:var(--court);border-color:var(--court);color:#fff}
+.photo{display:block;border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;font-weight:600;margin:0}
+.photo input{display:none}
+.preview{margin-top:10px;border-radius:10px;overflow:hidden}
+.preview img,.preview video{width:100%;max-height:240px;object-fit:cover;display:block}
+.learn{display:flex;flex-direction:column;gap:8px}
+.learn .ln{display:flex;gap:8px}
+.learn .ln input{flex:1}
+.learn .ln button{flex:none;width:44px;border:0;border-radius:10px;background:var(--soft);cursor:pointer;font-size:1.2rem;color:var(--muted)}
+.addline{margin-top:8px;border:0;background:none;font-weight:700;cursor:pointer;padding:6px 0}
+.row{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:24px}
+.btn{font-weight:700;border-radius:12px;padding:12px 20px;border:1.5px solid var(--line);background:transparent;cursor:pointer}
+.btn.primary{border:0;background:var(--pink);color:var(--pink-ink)}
+.btn.del{border:0;color:var(--danger);margin-right:auto;padding-left:0}
+.btn:disabled{opacity:.5}
+.err{color:var(--danger);font-size:.9rem;margin:10px 0 0;min-height:1em}
+.status{font-size:.82rem;color:var(--muted);margin-top:24px;text-align:center}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--along);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Grupos numerados */
+.group{list-style:none;margin:0 0 10px}
+.group-h{width:100%;padding-left:20px!important;border:1px solid var(--line);background:var(--card);border-radius:22px;padding:15px 16px;cursor:pointer;text-align:left}
+.group.open .group-h{margin-bottom:12px}
+.group-h .chev{width:20px;height:20px;color:var(--muted);transition:transform .2s;flex:none}
+.group.open .group-h .chev{transform:rotate(90deg)}
+.group .gempty{color:var(--muted);text-align:center;padding:14px;border:2px dashed var(--line);border-radius:22px}
+.group .gadd{display:block;margin:12px auto 0;border:0;background:var(--pink);color:var(--pink-ink);font-weight:700;border-radius:12px;padding:10px 18px;cursor:pointer}
+.group-h{display:flex;align-items:center;gap:10px}
+.group-h .n{min-width:18px;text-align:left;color:var(--court);font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1;flex:none}
+.group-h h2{margin:0;font-family:var(--display);font-size:1.3rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.group-h small{color:var(--muted);font-weight:600;font-size:.85rem;margin-left:auto}
+
+
+.group > ol{list-style:none;margin:0 0 4px 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.ex{position:relative}
+.ex .num{flex:none;min-width:14px;font-family:var(--display);font-weight:700;font-size:.9rem;color:var(--muted)}
+
+.ex-top{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.ex-top h3{flex:1;min-width:0;margin:0;font-size:.98rem;font-weight:600;line-height:1.2;overflow-wrap:anywhere}
+.slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.slides::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+.slide .cap{padding:4px 14px 2px}
+.slide .cap b{display:block;font-size:1rem;overflow-wrap:anywhere}
+.slide .cap p{margin:2px 0 0;font-size:.9rem;white-space:pre-wrap;color:var(--muted);overflow-wrap:anywhere}
+.slide .optlbl{font-size:.75rem;font-weight:700;color:var(--muted)}
+.dots{display:flex;justify-content:center;gap:6px;padding:10px 0 0}
+.dots i{width:7px;height:7px;border-radius:4px;background:var(--line);transition:all .2s}
+.dots i.on{background:var(--ink);width:18px;border-radius:4px}
+.ex-foot{padding:0 8px 4px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:0}
+.ex-foot .linkbtn{font-size:.78rem;padding:5px 6px}
+.swipe{font-size:.78rem;color:var(--muted);font-weight:600;margin-right:auto;align-self:center;padding-left:4px}
+.altnote{margin:6px 0 0;color:var(--muted)}
+.search{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:0 16px;margin:0 0 16px}
+.search svg{width:20px;height:20px;color:var(--muted);flex:none}
+.search input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:16px;padding:13px 0;color:var(--ink);outline:none}
+.search:focus-within{border-color:var(--court)}
+mark{background:var(--pink);color:var(--pink-ink);border-radius:3px;padding:0 2px}
+.ex-top{cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.slide{touch-action:pan-x pan-y}
+.optcount{font-size:.75rem;font-weight:600;color:var(--muted);flex:none}
+.altlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.altlist li{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:8px 10px 8px 14px}
+.altlist li span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.altlist .linkbtn{font-size:.85rem}
+html,body{overscroll-behavior-y:none}
+.login{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;overflow:auto}
+.login .hero{padding-bottom:40px}
+.login form{max-width:420px;width:100%;margin:0 auto;padding:28px 20px}
+.login p{color:var(--muted);margin:0 0 6px}
+.login input[type=email],.login input[type=password]{width:100%;font:inherit;font-size:16px;padding:13px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+.login .btn{width:100%;margin-top:22px;padding:14px}
+.status button{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:inherit;padding:4px}
+</style>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <header class="hero"><div class="hero-in"><h1>minha rotina</h1><small>entre uma vez e pronto</small></div></header>
+  <form id="loginForm">
+    <p>Use o mesmo e-mail e senha da ficha de exercícios.</p>
+    <label for="lEmail">E-mail</label>
+    <input type="email" id="lEmail" autocomplete="username" inputmode="email" autocapitalize="off">
+    <label for="lPass">Senha</label>
+    <input type="password" id="lPass" autocomplete="current-password">
+    <p class="err" id="lErr"></p>
+    <button type="submit" class="btn primary" id="lBtn">Entrar</button>
+  </form>
+</div>
+
+<header class="hero">
+  <div class="hero-in">
+    <h1>minha rotina</h1>
+    <small id="heroSub"></small>
+  </div>
+</header>
+
+<main class="wrap">
+    <div id="progress" hidden></div>
+  <div class="search" id="searchBox" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input type="search" id="q" placeholder="Pesquisar torneio, semana ou aprendizado" aria-label="Pesquisar no diário" autocomplete="off">
+  </div>
+  <ul class="list" id="list"></ul>
+  <p class="status"><span id="status"></span> <button type="button" id="logout" hidden>sair</button></p>
+</main>
+
+<button class="add" id="addBtn">+ exercício</button>
+
+<nav class="tabs" role="tablist">
+  <div class="tabs-in">
+    <button role="tab" data-tab="antes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3 4 4.5 4 9a4 4 0 0 1-8 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 0-7.5z"/></svg>pré</button>
+    <button role="tab" data-tab="despues" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.8"/><path d="M4 9.5c3 1 5 1.2 8 1.2s5-.2 8-1.2M12 10.7v4.3l-3.5 5.5M12 15l3.5 5.5"/></svg>pós</button>
+    <button role="tab" data-tab="diario" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg>diário</button>
+  </div>
+</nav>
+
+<!-- Exercício -->
+<dialog id="exDlg">
+  <form id="exForm">
+    <h3 id="exTitle">Novo exercício</h3>
+    <p class="altnote" id="altNote" hidden></p>
+    <div id="mainFields">
+    <span class="lbl">Tipo</span>
+    <div class="types" id="fTipo">
+      <button type="button" data-t="alongamento" aria-pressed="false">Alongamento</button>
+      <button type="button" data-t="mobilidade" aria-pressed="false">Mobilidade</button>
+      <button type="button" data-t="rolo" aria-pressed="false">Rolo</button>
+    </div>
+    <span class="lbl" hidden>Quando</span>
+    <div class="where" id="fWhere" hidden>
+      <button type="button" data-w="antes" aria-pressed="true">Pré-treino</button>
+      <button type="button" data-w="despues" aria-pressed="false">Pós-treino</button>
+    </div>
+    </div>
+    <label for="fNome">Nome</label>
+    <input type="text" id="fNome" placeholder="Ex.: Alongamento de posterior">
+    <span class="lbl">Foto</span>
+    <label class="photo" id="photoBtn"><span id="photoTxt">Escolher da fototeca</span><input type="file" id="fFoto" accept="image/*,video/*"></label>
+    <div class="preview" id="preview" hidden></div>
+    <button type="button" class="linkbtn" id="removeFoto" hidden>Tirar foto</button>
+    <label for="fDesc">Como se faz (opcional)</label>
+    <textarea id="fDesc" placeholder="Ex.: 30 segundos cada lado"></textarea>
+    <div id="altSection" hidden>
+      <span class="lbl">Outras opções</span>
+      <ul class="altlist" id="altList"></ul>
+      <button type="button" class="addline" id="addAlt">+ outra opção</button>
+      <div><button type="button" class="linkbtn" id="moveUp" hidden>Mover para cima</button></div>
+    </div>
+    <p class="err" id="exErr"></p>
+    <div class="row">
+      <button type="button" class="btn del" id="exDel" hidden>Apagar</button>
+      <button type="button" class="btn" id="exCancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="exSave">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diário -->
+<dialog id="diDlg">
+  <form id="diForm">
+    <h3 id="diTitle">Novo registro</h3>
+    <label for="fTorneio">Torneio</label>
+    <input type="text" id="fTorneio" placeholder="Ex.: Tennis Europe Barcelona">
+    <label for="fSemana">Semana</label>
+    <input type="text" id="fSemana" placeholder="Ex.: 3 a 9 de novembro">
+    <span class="lbl">O que eu aprendi</span>
+    <div class="learn" id="fLearn"></div>
+    <button type="button" class="addline" id="addLine">+ outra coisa</button>
+    <p class="err" id="diErr"></p>
+    <div class="row">
+      <button type="button" class="btn del" id="diDel" hidden>Apagar</button>
+      <button type="button" class="btn" id="diCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+const SB_URL = "https://thzcdyjrimyxoimuykdp.supabase.co";
+const SB_KEY = "sb_publishable_8igMbXwPV2EXQGd_em6QHQ_mnS5L_M3";
+const TABLE = "minha_rotina", BUCKET = "minha-rotina-fotos";
+const LS_KEY = "minha-rotina-cache", LS_PENDING = "minha-rotina-pendente";
+const SEED = {"exercises": [{"alts": [], "desc": "", "id": "mwc6647zhe8v6", "media": null, "nombre": "tendão achiles", "sec": "antes", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc6ri9ubdymy", "media": null, "nombre": "tendão achiles", "sec": "despues", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc7rxjc223r1", "media": null, "nombre": "batata da perna", "sec": "despues", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc7sdozrfxyd", "media": null, "nombre": "ísquio", "sec": "despues", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc7t0tk2bjej", "media": null, "nombre": "abductor (lado)", "sec": "despues", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc7t8durrqoy", "media": null, "nombre": "quadríceps", "sec": "despues", "tipo": "rolo"}, {"alts": [], "desc": "", "id": "mwc7tfho0tcxx", "media": null, "nombre": "adutor (dentro)", "sec": "despues", "tipo": "rolo"}], "diario": [], "done": {}, "items": [{"id": "mvjst8ynl5gc7", "nota": "día:\nvit C\nvit D\nomega 3\nmagnésio threonate\ncreatina\nbeterraba\n\nprimula (semana antes e menstruação)\nferro (menstruação)\n\nnoite:\nmagnésio bisglicinat\ntumeric\nsilício", "texto": "vitaminas"}]};
+const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "minha-rotina-auth" } }) : null;
+let user = null;
+const GRUPOS = [["rolo","Rolo"],["mobilidade","Mobilidade"],["alongamento","Alongamento"]];
+const TIPOS = { alongamento: "Alongamento", mobilidade: "Mobilidade", rolo: "Rolo" };
+let state = { exercises: [], diario: [], done: {} };
+let extra = {};
+let tab = "despues";
+const openGroups = new Set();
+let saving = false;
+const openCards = new Set();
+let lastTap = { id: null, t: 0 }, tapTimer = null;
+let q = "";
+const iso = d => { const z = new Date(d); z.setMinutes(z.getMinutes() - z.getTimezoneOffset()); return z.toISOString().slice(0, 10); };
+const TODAY = iso(new Date());
+let editEx = null, editAlt = null, altParent = null, editDi = null, pendingFile = null, removeMedia = false, fTipo = "", fWhere = "antes";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const ytId = u => { const m = (u || "").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/); return m ? m[1] : null; };
+
+/* ---------- Dados ---------- */
+function normalize(s) {
+  s = s || {};
+  const { exercises, diario, done, ...rest } = s;
+  extra = rest;
+  const d = done || {};
+  const ex = Array.isArray(exercises) ? exercises.filter(e => e.sec === "antes" || e.sec === "despues") : [];
+  ex.forEach(e => { if (!Array.isArray(e.alts)) e.alts = []; });
+  return { exercises: ex, diario: Array.isArray(diario) ? diario : [], done: d[TODAY] ? { [TODAY]: d[TODAY] } : {} };
+}
+const payload = () => ({ ...extra, exercises: state.exercises, diario: state.diario, done: state.done });
+function loadLocal() { try { const r = localStorage.getItem(LS_KEY); if (r) { state = normalize(JSON.parse(r)); return true; } } catch {} return false; }
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(payload())); } catch {} }
+const pending = v => { try { if (v === undefined) return localStorage.getItem(LS_PENDING) === "1"; v ? localStorage.setItem(LS_PENDING, "1") : localStorage.removeItem(LS_PENDING); } catch {} return false; };
+let saveTimer = null, pushing = false;
+async function push() {
+  if (!user || !sb || pushing) return;
+  pushing = true;
+  try {
+    const { error } = await sb.from(TABLE).upsert({ user_id: user.id, data: payload(), updated_at: new Date().toISOString() });
+    if (error) throw error;
+    pending(false); setStatus("");
+  } catch { setStatus(navigator.onLine ? "Não deu para salvar na nuvem agora. Vou tentar de novo." : "Sem internet. Salvo no celular e envio quando voltar."); }
+  finally { pushing = false; }
+}
+function save() {
+  saveLocal(); pending(true);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(push, 500);
+}
+window.addEventListener("online", () => { if (pending()) push(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && pending()) push(); });
+const setStatus = t => { $("#status").textContent = t; };
+
+/* ---------- Fotos ---------- */
+function idb() { return new Promise((res, rej) => { const r = indexedDB.open("mi-rutina-media", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbPut(k, b) { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction("files", "readwrite"); t.objectStore("files").put(b, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+async function idbGet(k) { try { const d = await idb(); return await new Promise(res => { const q = d.transaction("files").objectStore("files").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch { return null; } }
+async function idbDel(k) { try { const d = await idb(); d.transaction("files", "readwrite").objectStore("files").delete(k); } catch {} }
+async function shrink(file) {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+  try {
+    const bmp = await createImageBitmap(file); const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(b => r(b || file), "image/jpeg", 0.85));
+  } catch { return file; }
+}
+async function storeMedia(file) {
+  const kind = file.type.startsWith("video/") ? "video" : "image";
+  const blob = kind === "image" ? await shrink(file) : file;
+  if (blob.size > 45 * 1024 * 1024) throw new Error("O arquivo é grande demais. Escolha um vídeo mais curto ou uma foto.");
+  if (!sb || !user) throw new Error("Entre na sua conta para enviar fotos.");
+  const type = blob.type || (kind === "video" ? "video/mp4" : "image/jpeg");
+  const ext = (type.split("/")[1] || "bin").replace("quicktime", "mov").replace("jpeg", "jpg");
+  const path = `${user.id}/${uid()}.${ext}`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: type, upsert: false });
+  if (error) throw new Error(navigator.onLine ? "Não deu para enviar a foto. Tente de novo." : "Sem internet: não deu para enviar a foto agora.");
+  try { await idbPut(path, blob); } catch {}
+  return { kind, ref: "sb:" + path };
+}
+const urlCache = {};
+async function mediaUrl(m) {
+  if (!m || m.kind === "youtube" || !m.ref) return null;
+  if (urlCache[m.ref]) return urlCache[m.ref];
+  const key = m.ref.startsWith("sb:") ? m.ref.slice(3) : m.ref.startsWith("idb:") ? m.ref.slice(4) : null;
+  if (!key) return null;
+  let b = await idbGet(key);
+  if (!b && m.ref.startsWith("sb:") && sb) {
+    try { const { data, error } = await sb.storage.from(BUCKET).download(key); if (!error && data) { b = data; idbPut(key, data).catch(() => {}); } } catch {}
+  }
+  return b ? (urlCache[m.ref] = URL.createObjectURL(b)) : null;
+}
+async function dropMedia(m) {
+  if (!m || m.kind === "youtube" || !m.ref) return;
+  const key = m.ref.replace(/^(sb|idb):/, "");
+  idbDel(key);
+  if (m.ref.startsWith("sb:") && sb) try { await sb.storage.from(BUCKET).remove([key]); } catch {}
+}
+
+/* ---------- Desenhar ---------- */
+const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const doneList = () => state.done[TODAY] || [];
+const exOfTab = () => state.exercises.filter(e => e.sec === tab);
+const groupKey = e => TIPOS[e.tipo] ? e.tipo : "outros";
+
+function mediaHtml(o, key, alt) {
+  const yt = o.media && o.media.kind === "youtube" ? ytId(o.media.url) : null;
+  if (yt) return `<div class="media" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${yt}?playsinline=1&rel=0" title="${esc(alt)}" allowfullscreen loading="lazy"></iframe></div>`;
+  if (o.media) return `<div class="media" data-media="${key}">carregando…</div>`;
+  return "";
+}
+
+function exCard(e, n) {
+  const isDone = doneList().includes(e.id);
+  const slides = [{ ...e, _alt: null }, ...e.alts.map(a => ({ ...a, _alt: a.id }))];
+  const many = slides.length > 1;
+  const hasMore = many || e.media || e.desc;
+  const open = openCards.has(e.id) && hasMore;
+  return `
+  <li class="ex ${open ? "open" : ""}" data-id="${e.id}">
+    <div class="ex-top" data-tap>
+      <span class="num">${n}</span>
+      <h3>${esc(e.nombre)}</h3>
+      ${many ? `<span class="optcount">${slides.length} opções</span>` : ""}
+    </div>
+    ${open ? `<div class="slides" data-slides>
+      ${slides.map((sl, i) => `
+        <div class="slide" data-alt="${sl._alt || ""}" data-tap>
+          ${mediaHtml(sl, sl._alt ? e.id + "/" + sl._alt : e.id, sl.nombre)}
+          ${many || sl.desc ? `<div class="cap">
+            ${many ? `<span class="optlbl">opção ${i + 1} de ${slides.length}</span><b>${esc(sl.nombre)}</b>` : ""}
+            ${sl.desc ? `<p>${esc(sl.desc)}</p>` : ""}
+          </div>` : ""}
+        </div>`).join("")}
+    </div>
+    ${many ? `<div class="dots" aria-hidden="true">${slides.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : ""}<div style="height:10px"></div>` : ""}
+  </li>`;
+}
+
+const norm = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function hl(text) {
+  const t = esc(text); if (!q) return t;
+  const nq = norm(q), src = String(text || ""), ns = norm(src);
+  let out = "", i = 0, k;
+  while ((k = ns.indexOf(nq, i)) !== -1) { out += esc(src.slice(i, k)) + "<mark>" + esc(src.slice(k, k + nq.length)) + "</mark>"; i = k + nq.length; }
+  return out + esc(src.slice(i));
+}
+function renderDiario() {
+  const list = $("#list");
+  if (!state.diario.length) { list.innerHTML = `<li class="empty"><b>Seu diário está vazio</b>Depois de cada torneio, anote a semana, o torneio e o que você aprendeu.</li>`; return; }
+  const nq = norm(q.trim());
+  const items = [...state.diario].reverse().map(d => {
+    if (!nq) return { d, learn: d.aprendizados || [] };
+    const head = norm(d.torneio).includes(nq) || norm(d.semana).includes(nq);
+    const hits = (d.aprendizados || []).filter(a => norm(a).includes(nq));
+    return head ? { d, learn: d.aprendizados || [] } : hits.length ? { d, learn: hits } : null;
+  }).filter(Boolean);
+  if (!items.length) { list.innerHTML = `<li class="empty"><b>Nada encontrado</b>Nenhum registro tem «${esc(q.trim())}». Tente outra palavra.</li>`; return; }
+  list.innerHTML = items.map(({ d, learn }) => `
+    <li class="entry" data-di="${d.id}">
+      ${d.semana ? `<div class="wk">${hl(d.semana)}</div>` : ""}
+      <h2>${hl(d.torneio || "Sem nome")}</h2>
+      ${learn.length ? `<ul>${learn.map(a => `<li><span>${hl(a)}</span></li>`).join("")}</ul>` : `<p class="none">Nada anotado ainda.</p>`}
+      <div class="ex-foot"><button class="linkbtn" data-diedit>editar</button></div>
+    </li>`).join("");
+}
+$("#q").addEventListener("input", e => { q = e.target.value; renderDiario(); });
+
+function render() {
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
+  const list = $("#list");
+  $("#addBtn").textContent = tab === "diario" ? "+ registro" : "+ exercício";
+  $("#heroSub").textContent = tab === "diario" ? `diário de jogos · ${state.diario.length} ${state.diario.length === 1 ? "registro" : "registros"}` : `${tab === "antes" ? "pré" : "pós"}-treino · ${exOfTab().length} ${exOfTab().length === 1 ? "exercício" : "exercícios"}`;
+
+  $("#searchBox").hidden = tab !== "diario" || !state.diario.length;
+  if (tab === "diario") {
+    $("#addBtn").hidden = false;
+    $("#progress").hidden = true;
+    renderDiario();
+    return;
+  }
+  $("#addBtn").hidden = tab === "antes";
+  if (tab === "antes") {
+    $("#progress").hidden = true;
+    $("#heroSub").textContent = "pré-treino";
+    list.innerHTML = `<li class="empty"><b>Nada por aqui por enquanto</b>O pré-treino vai ficar aqui mais pra frente.</li>`;
+    return;
+  }
+  const all = exOfTab();
+  const done = all.filter(e => doneList().includes(e.id)).length;
+
+  const grupos = [...GRUPOS];
+  if (all.some(e => groupKey(e) === "outros")) grupos.push(["outros", "Outros"]);
+  const chev = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+  list.innerHTML = grupos.map(([k, label], gi) => {
+    const items = all.filter(e => groupKey(e) === k);
+    const key = tab + ":" + k, open = openGroups.has(key);
+    const feitos = items.filter(e => doneList().includes(e.id)).length;
+    return `<li class="group g-${k} ${open ? "open" : ""}">
+      <button class="group-h" data-group="${key}" aria-expanded="${open}"><h2>${label}</h2><small>${items.length || "vazio"}</small>${chev}</button>
+      ${open ? (items.length
+        ? `<ol>${items.map((e, i) => exCard(e, i + 1)).join("")}</ol>`
+        : `<div class="gempty">Nenhum exercício de ${label.toLowerCase()} ainda.<button class="gadd" data-gadd="${k}">+ adicionar ${label.toLowerCase()}</button></div>`) : ""}
+    </li>`;
+  }).join("");
+
+  list.querySelectorAll("[data-media]").forEach(async box => {
+    const [eid, aid] = box.dataset.media.split("/");
+    const e = state.exercises.find(x => x.id === eid); if (!e) return;
+    const o = aid ? e.alts.find(a => a.id === aid) : e;
+    const url = o && await mediaUrl(o.media);
+    if (!url) { box.textContent = "Foto não disponível neste aparelho"; return; }
+    box.innerHTML = o.media.kind === "video" ? `<video src="${url}" controls playsinline preload="metadata"></video>` : `<img src="${url}" alt="${esc(o.nombre)}">`;
+    box.firstElementChild.onerror = () => { box.textContent = "Foto não disponível"; };
+  });
+  list.querySelectorAll("[data-slides]").forEach(sc => {
+    const dots = sc.parentElement.querySelectorAll(".dots i");
+    if (!dots.length) return;
+    sc.addEventListener("scroll", () => {
+      const i = Math.round(sc.scrollLeft / sc.clientWidth);
+      dots.forEach((d, j) => d.classList.toggle("on", j === i));
+    }, { passive: true });
+  });
+}
+
+/* ---------- Eventos ---------- */
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); window.scrollTo(0, 0); });
+$("#addBtn").onclick = () => tab === "diario" ? openDi(null) : openEx(null);
+
+function currentSlide(card) {
+  const sc = card.querySelector("[data-slides]");
+  const i = Math.round(sc.scrollLeft / Math.max(1, sc.clientWidth));
+  return sc.children[i]?.dataset.alt || "";
+}
+
+$("#list").onclick = e => {
+  if (e.target.closest("[data-diedit]")) { const id = e.target.closest("[data-di]").dataset.di; openDi(state.diario.find(d => d.id === id)); return; }
+  const g = e.target.closest("[data-group]");
+  if (g) { const k = g.dataset.group; openGroups.has(k) ? openGroups.delete(k) : openGroups.add(k); render(); return; }
+  const ga = e.target.closest("[data-gadd]");
+  if (ga) { openEx(null, ga.dataset.gadd); return; }
+  const btn = e.target.closest("[data-act]");
+  if (btn && btn.dataset.act === "toggle") {
+    const id = btn.closest(".ex").dataset.id;
+    const arr = state.done[TODAY] = doneList();
+    const k = arr.indexOf(id); k >= 0 ? arr.splice(k, 1) : arr.push(id);
+    save(); render(); return;
+  }
+  const tap = e.target.closest("[data-tap]");
+  if (!tap || e.target.closest("video, iframe")) return;
+  const card = tap.closest(".ex"); const id = card.dataset.id;
+  const ex = state.exercises.find(x => x.id === id);
+  const now = Date.now();
+  if (lastTap.id === id && now - lastTap.t < 350) {
+    clearTimeout(tapTimer); lastTap = { id: null, t: 0 };
+    const aid = tap.dataset.alt;
+    aid ? openAlt(ex, ex.alts.find(a => a.id === aid)) : openEx(ex);
+    return;
+  }
+  lastTap = { id, t: now };
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { openCards.has(id) ? openCards.delete(id) : openCards.add(id); render(); }, 300);
+};
+
+/* ---------- Formulário de exercício e de outras opções ---------- */
+function setTipo(t) { fTipo = t; document.querySelectorAll("#fTipo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t)); }
+function setWhere(w) { fWhere = w; document.querySelectorAll("#fWhere button").forEach(b => b.setAttribute("aria-pressed", b.dataset.w === w)); }
+$("#fTipo").onclick = e => { const b = e.target.closest("[data-t]"); if (b) setTipo(b.dataset.t); };
+$("#fWhere").onclick = e => { const b = e.target.closest("[data-w]"); if (b) setWhere(b.dataset.w); };
+function showPreview(url, kind) {
+  const p = $("#preview");
+  p.hidden = !url; $("#removeFoto").hidden = !url;
+  $("#photoTxt").textContent = url ? "Trocar foto" : "Escolher da fototeca";
+  p.innerHTML = !url ? "" : kind === "video" ? `<video src="${url}" controls playsinline></video>` : `<img src="${url}" alt="">`;
+}
+async function fillCommon(o) {
+  pendingFile = null; removeMedia = false;
+  $("#fNome").value = o?.nombre || "";
+  $("#fDesc").value = o?.desc || "";
+  $("#fFoto").value = ""; $("#exErr").textContent = "";
+  showPreview(o?.media && o.media.kind !== "youtube" ? await mediaUrl(o.media) : null, o?.media?.kind);
+}
+function fillAlts(ex) {
+  $("#altSection").hidden = !ex;
+  if (!ex) return;
+  $("#altList").innerHTML = ex.alts.map(a => `<li><span>${esc(a.nombre)}</span><button type="button" class="linkbtn" data-altedit="${a.id}">editar</button></li>`).join("");
+  const same = exOfTab().filter(x => groupKey(x) === groupKey(ex));
+  $("#moveUp").hidden = same.indexOf(ex) <= 0;
+}
+$("#altList").onclick = e => { const b = e.target.closest("[data-altedit]"); if (!b) return; const ex = state.exercises.find(x => x.id === editEx); $("#exDlg").close(); openAlt(ex, ex.alts.find(a => a.id === b.dataset.altedit)); };
+$("#addAlt").onclick = () => { const ex = state.exercises.find(x => x.id === editEx); $("#exDlg").close(); openAlt(ex, null); };
+$("#moveUp").onclick = () => {
+  const ex = state.exercises.find(x => x.id === editEx); if (!ex) return;
+  const same = exOfTab().filter(x => groupKey(x) === groupKey(ex)); const prev = same[same.indexOf(ex) - 1]; if (!prev) return;
+  const a = state.exercises.indexOf(ex), b = state.exercises.indexOf(prev);
+  [state.exercises[a], state.exercises[b]] = [state.exercises[b], state.exercises[a]];
+  save(); render(); fillAlts(ex);
+};
+async function openEx(ex, tipoPadrao) {
+  altParent = null; editAlt = null; editEx = ex ? ex.id : null;
+  fillAlts(ex);
+  $("#mainFields").hidden = false; $("#altNote").hidden = true;
+  $("#exTitle").textContent = ex ? "Editar exercício" : "Novo exercício";
+  setTipo(ex?.tipo || tipoPadrao || ""); setWhere("despues");
+  $("#exDel").hidden = !ex;
+  await fillCommon(ex);
+  $("#exDlg").showModal();
+}
+async function openAlt(parent, alt) {
+  altParent = parent.id; editAlt = alt ? alt.id : null; editEx = null;
+  $("#altSection").hidden = true;
+  $("#mainFields").hidden = true; $("#altNote").hidden = false;
+  $("#altNote").textContent = `Outra forma de fazer «${parent.nombre}». Toque no exercício para ver e arraste para o lado.`;
+  $("#exTitle").textContent = alt ? "Editar opção" : "Outra opção";
+  $("#exDel").hidden = !alt;
+  await fillCommon(alt);
+  $("#exDlg").showModal();
+}
+$("#fFoto").onchange = e => { const f = e.target.files[0]; if (!f) return; pendingFile = f; removeMedia = false; showPreview(URL.createObjectURL(f), f.type.startsWith("video/") ? "video" : "image"); };
+$("#removeFoto").onclick = () => { pendingFile = null; removeMedia = true; $("#fFoto").value = ""; showPreview(null); };
+$("#exCancel").onclick = () => $("#exDlg").close();
+$("#exDel").onclick = () => {
+  const del = $("#exDel");
+  if (del.dataset.sure !== "1") { del.dataset.sure = "1"; del.textContent = "Apagar mesmo?"; return; }
+  if (altParent) {
+    const p = state.exercises.find(x => x.id === altParent); const a = p?.alts.find(x => x.id === editAlt);
+    if (a) { p.alts = p.alts.filter(x => x !== a); dropMedia(a.media); }
+  } else {
+    const ex = state.exercises.find(x => x.id === editEx); if (!ex) return;
+    state.exercises = state.exercises.filter(x => x !== ex);
+    dropMedia(ex.media); ex.alts.forEach(a => dropMedia(a.media));
+  }
+  save(); render(); $("#exDlg").close();
+};
+$("#exDlg").addEventListener("close", () => { $("#exDel").dataset.sure = ""; $("#exDel").textContent = "Apagar"; });
+$("#exForm").onsubmit = async ev => {
+  ev.preventDefault();
+  const nombre = $("#fNome").value.trim();
+  if (!altParent && !fTipo) { $("#exErr").textContent = "Escolha se é rolo, mobilidade ou alongamento."; return; }
+  if (!nombre) { $("#exErr").textContent = "Escreva o nome do exercício."; return; }
+  if (saving) return; saving = true;
+  const sb = $("#exSave"); sb.disabled = true; sb.textContent = pendingFile ? "Enviando…" : "Salvando…";
+  try {
+    const parent = altParent ? state.exercises.find(x => x.id === altParent) : null;
+    const target = parent ? parent.alts.find(x => x.id === editAlt) : state.exercises.find(x => x.id === editEx);
+    const old = target?.media || null;
+    let media = old;
+    if (pendingFile) media = await storeMedia(pendingFile);
+    else if (removeMedia) media = null;
+    const base = { nombre, desc: $("#fDesc").value.trim(), media };
+    if (parent) {
+      if (target) Object.assign(target, base); else parent.alts.push({ id: uid(), ...base });
+    } else {
+      const data = { ...base, sec: fWhere, tipo: fTipo };
+      if (target) { Object.assign(target, data); delete target.dosis; } else state.exercises.push({ id: uid(), alts: [], ...data });
+      tab = fWhere; openGroups.add(fWhere + ":" + fTipo);
+    }
+    if (old && old !== media) dropMedia(old);
+    save(); render(); $("#exDlg").close();
+    if (parent) { openCards.add(parent.id); render(); openEx(parent); }
+  } catch (e) { $("#exErr").textContent = e.message || "Não deu para salvar. Tente de novo."; }
+  finally { saving = false; sb.disabled = false; sb.textContent = "Salvar"; }
+};
+
+/* ---------- Formulário do diário ---------- */
+function addLine(v = "") {
+  const d = document.createElement("div"); d.className = "ln";
+  d.innerHTML = `<input type="text" placeholder="Ex.: Respirar antes de sacar" aria-label="Aprendizado"><button type="button" aria-label="Tirar">×</button>`;
+  d.querySelector("input").value = v;
+  d.querySelector("button").onclick = () => { d.remove(); if (!$("#fLearn").children.length) addLine(); };
+  $("#fLearn").appendChild(d);
+  return d.querySelector("input");
+}
+$("#addLine").onclick = () => addLine().focus();
+function openDi(d) {
+  editDi = d ? d.id : null;
+  $("#diTitle").textContent = d ? "Editar registro" : "Novo registro";
+  $("#fTorneio").value = d?.torneio || "";
+  $("#fSemana").value = d?.semana || "";
+  $("#fLearn").innerHTML = "";
+  (d?.aprendizados?.length ? d.aprendizados : [""]).forEach(a => addLine(a));
+  $("#diErr").textContent = "";
+  $("#diDel").hidden = !d;
+  $("#diDlg").showModal();
+}
+$("#diCancel").onclick = () => $("#diDlg").close();
+$("#diDel").onclick = () => {
+  if ($("#diDel").dataset.sure !== "1") { $("#diDel").dataset.sure = "1"; $("#diDel").textContent = "Apagar mesmo?"; return; }
+  state.diario = state.diario.filter(x => x.id !== editDi); save(); render(); $("#diDlg").close();
+};
+$("#diDlg").addEventListener("close", () => { $("#diDel").dataset.sure = ""; $("#diDel").textContent = "Apagar"; });
+$("#diForm").onsubmit = e => {
+  e.preventDefault();
+  const torneio = $("#fTorneio").value.trim(), semana = $("#fSemana").value.trim();
+  const aprendizados = [...$("#fLearn").querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
+  if (!torneio && !semana) { $("#diErr").textContent = "Escreva o torneio ou a semana."; return; }
+  const d = state.diario.find(x => x.id === editDi);
+  if (d) Object.assign(d, { torneio, semana, aprendizados });
+  else state.diario.push({ id: uid(), torneio, semana, aprendizados });
+  save(); render(); $("#diDlg").close();
+};
+
+
+/* ---------- Deslizar para trocar de aba ---------- */
+(() => {
+  const ORDER = ["antes", "despues", "diario"];
+  let x0 = null, y0 = null, t0 = 0;
+  document.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1 || document.querySelector("dialog[open]") || (e.target.closest && e.target.closest("[data-slides], input, textarea, video, iframe"))) { x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
+  }, { passive: true });
+  document.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - t0 > 700) return;
+    const i = ORDER.indexOf(tab) + (dx > 0 ? -1 : 1);
+    if (i < 0 || i >= ORDER.length) return;
+    tab = ORDER[i]; render(); window.scrollTo(0, 0);
+  }, { passive: true });
+})();
+
+/* ---------- Entrar e sincronizar ---------- */
+async function sync() {
+  if (!user) return;
+  $("#logout").hidden = false;
+  if (pending()) { await push(); return; }
+  try {
+    const { data, error } = await sb.from(TABLE).select("data").eq("user_id", user.id).maybeSingle();
+    if (error) throw error;
+    if (data && data.data) { state = normalize(data.data); saveLocal(); render(); setStatus(""); }
+    else {
+      if (!state.exercises.length && !state.diario.length) { state = normalize(JSON.parse(JSON.stringify(SEED))); render(); }
+      save();
+    }
+  } catch { setStatus(navigator.onLine ? "Não deu para carregar da nuvem. Mostrando o que está no celular." : "Sem internet. Mostrando o que está no celular."); }
+}
+function showLogin(v) { $("#login").hidden = !v; }
+$("#loginForm").onsubmit = async e => {
+  e.preventDefault();
+  const email = $("#lEmail").value.trim(), password = $("#lPass").value;
+  if (!email || !password) { $("#lErr").textContent = "Escreva o e-mail e a senha."; return; }
+  const bt = $("#lBtn"); bt.disabled = true; bt.textContent = "Entrando…"; $("#lErr").textContent = "";
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    user = data.user; showLogin(false); $("#lPass").value = "";
+    await sync();
+  } catch (err) {
+    $("#lErr").textContent = !navigator.onLine ? "Sem internet. Conecte para entrar pela primeira vez." : /invalid/i.test(err?.message || "") ? "E-mail ou senha errados." : "Não deu para entrar. Tente de novo.";
+  } finally { bt.disabled = false; bt.textContent = "Entrar"; }
+};
+$("#logout").onclick = async () => {
+  if ($("#logout").dataset.sure !== "1") { $("#logout").dataset.sure = "1"; $("#logout").textContent = "sair mesmo?"; setTimeout(() => { $("#logout").dataset.sure = ""; $("#logout").textContent = "sair"; }, 4000); return; }
+  if (pending()) await push();
+  try { await sb.auth.signOut(); } catch {}
+  user = null; try { localStorage.removeItem(LS_KEY); } catch {}
+  state = normalize({}); render(); $("#logout").hidden = true; showLogin(true);
+};
+
+loadLocal(); render();
+(async () => {
+  if (!sb) { setStatus("Não deu para carregar. Confira a internet e abra de novo."); return; }
+  let session = null;
+  try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+  if (!session) { showLogin(true); return; }
+  user = session.user;
+  await sync();
+})();
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+})();
+</script>
+</body>
+</html>
