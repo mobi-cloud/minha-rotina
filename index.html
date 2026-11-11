@@ -191,6 +191,11 @@ html,body{overscroll-behavior-y:none}
 .pinrow small{display:block;color:var(--muted);font-size:.85rem}
 .pinic{width:15px;height:15px;color:var(--court);margin-right:6px;vertical-align:-1px}
 .entry.pinned{border-color:var(--court)!important;border-width:1.5px!important}
+.btn.share{width:100%;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:8px}
+.err.ok{color:var(--muted)}
+.btn.share svg{width:20px;height:20px}
+.entry-b{cursor:pointer;-webkit-user-select:none;user-select:none}
+.entry-h{-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .logout{position:absolute;right:0;top:2px;z-index:1;border:0;border-radius:10px;padding:6px 12px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer}
 html{--sab:env(safe-area-inset-bottom,0px);background:var(--card)}
 body{min-height:100vh}
@@ -299,6 +304,7 @@ html.gap .tabs{border-bottom:0}
     <span class="lbl">O que eu aprendi</span>
     <div class="learn" id="fLearn"></div>
     <button type="button" class="addline" id="addLine">+ outra coisa</button>
+    <button type="button" class="btn share" id="diShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Compartilhar</button>
     <p class="err" id="diErr"></p>
     <div class="row">
       <button type="button" class="btn del" id="diDel" hidden>Apagar</button>
@@ -489,7 +495,6 @@ function renderDiario() {
       </button>
       ${open ? `<div class="entry-b">
         ${learn.length ? `<ul>${learn.map(a => `<li><span>${hl(a)}</span></li>`).join("")}</ul>` : `<p class="none">Nada anotado ainda.</p>`}
-        <div class="ex-foot"><button class="linkbtn" data-diedit>editar</button></div>
       </div>` : ""}
     </li>`;
   }).join("");
@@ -565,7 +570,18 @@ function currentSlide(card) {
 
 $("#list").onclick = e => {
   const dt = e.target.closest("[data-ditoggle]");
-  if (dt) { const id = dt.closest("[data-di]").dataset.di; openEntries.has(id) ? openEntries.delete(id) : openEntries.add(id); renderDiario(); return; }
+  const dtap = dt || e.target.closest(".entry-b");
+  if (dtap) {
+    const id = dtap.closest("[data-di]").dataset.di, now = Date.now();
+    if (lastTap.id === "di:" + id && now - lastTap.t < 350) {
+      clearTimeout(tapTimer); lastTap = { id: null, t: 0 };
+      openDi(state.diario.find(d => d.id === id)); return;
+    }
+    lastTap = { id: "di:" + id, t: now };
+    clearTimeout(tapTimer);
+    if (dt) tapTimer = setTimeout(() => { openEntries.has(id) ? openEntries.delete(id) : openEntries.add(id); renderDiario(); }, 300);
+    return;
+  }
   if (e.target.closest("[data-diedit]")) { const id = e.target.closest("[data-di]").dataset.di; openDi(state.diario.find(d => d.id === id)); return; }
   const g = e.target.closest("[data-group]");
   if (g) { const k = g.dataset.group; openGroups.has(k) ? openGroups.delete(k) : openGroups.add(k); render(); return; }
@@ -712,11 +728,22 @@ function openDi(d) {
   $("#fFixar").checked = !!d?.fixado;
   $("#fLearn").innerHTML = "";
   (d?.aprendizados?.length ? d.aprendizados : [""]).forEach(a => addLine(a));
-  $("#diErr").textContent = "";
+  $("#diErr").textContent = ""; $("#diErr").classList.remove("ok");
   $("#diDel").hidden = !d;
   $("#diDlg").showModal();
 }
 $("#diCancel").onclick = () => $("#diDlg").close();
+$("#diShare").onclick = async () => {
+  const torneio = $("#fTorneio").value.trim(), semana = $("#fSemana").value.trim();
+  const ap = [...$("#fLearn").querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
+  const text = [torneio, semana, "", ap.length ? "O que eu aprendi:" : "", ...ap.map(a => "• " + a)].filter((l, i, a) => l || (i > 0 && a[i - 1])).join("\n").trim();
+  if (!text) { $("#diErr").textContent = "Escreva alguma coisa antes de compartilhar."; return; }
+  try {
+    if (navigator.share) { await navigator.share({ title: torneio || "Diário", text }); return; }
+  } catch (err) { if (err && err.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(text); $("#diErr").textContent = "Copiado! Agora é só colar na mensagem."; $("#diErr").classList.add("ok"); }
+  catch { $("#diErr").textContent = "Não deu para compartilhar daqui."; }
+};
 $("#diDel").onclick = () => {
   if ($("#diDel").dataset.sure !== "1") { $("#diDel").dataset.sure = "1"; $("#diDel").textContent = "Apagar mesmo?"; return; }
   state.diario = state.diario.filter(x => x.id !== editDi); save(); render(); $("#diDlg").close();
