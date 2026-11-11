@@ -198,6 +198,9 @@ html,body{overscroll-behavior-y:none}
 .entry-h{-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
 .checks li::before{display:none!important}
+.checks li.pt{gap:10px;align-items:flex-start;padding:3px 0}
+.checks li.pt::before{content:"";display:block!important;flex:none;width:9px;height:9px;border-radius:3px;background:var(--pink);box-shadow:0 0 0 2px var(--court);margin-top:8px}
+.checks li.pt span{cursor:default}
 .checks li.sec{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 0 2px}
 .checks li.sec:first-child{padding-top:2px}
 .checks li{display:flex;align-items:center;gap:12px;padding:4px 0}
@@ -293,9 +296,9 @@ html.gap .tabs{border-bottom:0}
     <label for="fDesc">Como se faz (opcional)</label>
     <textarea id="fDesc" placeholder="Ex.: 30 segundos cada lado"></textarea>
     <div id="altSection" hidden>
-      <span class="lbl">Outras opções</span>
+      <span class="lbl">Outros exercícios</span>
       <ul class="altlist" id="altList"></ul>
-      <button type="button" class="addline" id="addAlt">+ outra opção</button>
+      <button type="button" class="addline" id="addAlt">+ outro exercício</button>
       <div><button type="button" class="linkbtn" id="moveUp" hidden>Mover para cima</button></div>
     </div>
     <p class="err" id="exErr"></p>
@@ -485,14 +488,14 @@ function exCard(e, n) {
     <div class="ex-top" data-tap>
       <span class="num">${n}</span>
       <h3>${esc(e.nombre)}</h3>
-      ${many ? `<span class="optcount">${slides.length} opções</span>` : ""}
+      ${many ? `<span class="optcount">${slides.length} exercícios</span>` : ""}
     </div>
     ${open ? `<div class="slides" data-slides>
       ${slides.map((sl, i) => `
         <div class="slide" data-alt="${sl._alt || ""}" data-tap>
           ${mediaHtml(sl, sl._alt ? e.id + "/" + sl._alt : e.id, sl.nombre)}
           ${many || sl.desc ? `<div class="cap">
-            ${many ? `<span class="optlbl">opção ${i + 1} de ${slides.length}</span><b>${esc(sl.nombre)}</b>` : ""}
+            ${many ? `<span class="optlbl">exercício ${i + 1} de ${slides.length}</span><b>${esc(sl.nombre)}</b>` : ""}
             ${sl.desc ? `<p>${esc(sl.desc)}</p>` : ""}
           </div>` : ""}
         </div>`).join("")}
@@ -704,8 +707,8 @@ async function openAlt(parent, alt) {
   altParent = parent.id; editAlt = alt ? alt.id : null; editEx = null;
   $("#altSection").hidden = true;
   $("#mainFields").hidden = true; $("#altNote").hidden = false;
-  $("#altNote").textContent = `Outra forma de fazer «${parent.nombre}». Toque no exercício para ver e arraste para o lado.`;
-  $("#exTitle").textContent = alt ? "Editar opção" : "Outra opção";
+  $("#altNote").textContent = `Outro exercício dentro de «${parent.nombre}». Toque no exercício para ver e arraste para o lado.`;
+  $("#exTitle").textContent = alt ? "Editar exercício" : "Outro exercício";
   $("#exDel").hidden = !alt;
   await fillCommon(alt);
   $("#exDlg").showModal();
@@ -769,13 +772,12 @@ function renderListas() {
     return `<li class="entry lst ${open ? "open" : ""}" data-li="${l.id}">
       <button class="entry-h" data-litoggle aria-expanded="${open}">
         <span class="t"><b>${esc(l.titulo)}</b></span>
-        ${marcaveis.length ? `<em>${feitos}/${marcaveis.length}</em>` : ""}
+        ${!open && marcaveis.length ? `<em>${marcaveis.length}</em>` : ""}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
       </button>
       ${open ? `<div class="entry-b lst-b">
-        <ul class="checks">${l.itens.map(i => isSec(i) ? `<li class="sec">${esc(i.texto.replace(/:\s*$/, ""))}</li>` : `<li class="${i.feito ? "on" : ""}"><button class="cb" data-check="${i.id}" aria-pressed="${i.feito}" aria-label="${i.feito ? "Desmarcar" : "Marcar"}">${boxSvg}</button><span data-check="${i.id}">${esc(i.texto)}</span></li>`).join("")}</ul>
+        ${marcaveis.length || l.itens.length ? `<ul class="checks">${l.itens.map(i => isSec(i) ? `<li class="sec">${esc(i.texto.replace(/:\s*$/, ""))}</li>` : `<li class="pt"><span>${esc(i.texto)}</span></li>`).join("")}</ul>` : `<p class="none">Lista vazia.</p>`}
         <form class="quick" data-quick><input type="text" placeholder="Adicionar item" aria-label="Novo item" enterkeyhint="done"><button type="submit" aria-label="Adicionar">+</button></form>
-        ${feitos ? `<button class="linkbtn" data-liclear>desmarcar tudo</button>` : ""}
       </div>` : ""}
     </li>`;
   }).join("");
@@ -791,9 +793,6 @@ $("#list").addEventListener("submit", e => {
 $("#list").addEventListener("click", e => {
   const li = e.target.closest("[data-li]"); if (!li || tab !== "lista") return;
   const l = state.listas.find(x => x.id === li.dataset.li); if (!l) return;
-  const c = e.target.closest("[data-check]");
-  if (c) { const it = l.itens.find(i => i.id === c.dataset.check); it.feito = !it.feito; save(); render(); return; }
-  if (e.target.closest("[data-liclear]")) { l.itens.forEach(i => i.feito = false); save(); render(); return; }
   const h = e.target.closest("[data-litoggle]");
   if (!h) return;
   const now = Date.now();
