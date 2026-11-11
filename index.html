@@ -88,11 +88,11 @@ h1{margin:0;font-family:var(--display);font-size:clamp(2.6rem,12vw,3.4rem);font-
 /* Botão e abas embaixo */
 .add{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(92px + var(--sab));border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:1rem;background:var(--pink);color:var(--pink-ink);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.16);white-space:nowrap;z-index:6}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(10px + var(--sab))}
-.tabs-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tabs-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .tabs button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.82rem;font-weight:600;padding:6px 0;cursor:pointer}
 .tabs svg{width:25px;height:25px}
 .tabs button[aria-selected="true"]{color:var(--ink);font-weight:800}
-.tabs svg{box-sizing:content-box;padding:3px 14px;border-radius:10px}
+.tabs svg{box-sizing:content-box;padding:3px 12px;border-radius:10px}
 .tabs button[aria-selected="true"] svg{background:var(--pink);color:var(--pink-ink)}
 
 /* Formulários */
@@ -196,6 +196,20 @@ html,body{overscroll-behavior-y:none}
 .btn.share svg{width:20px;height:20px}
 .entry-b{cursor:pointer;-webkit-user-select:none;user-select:none}
 .entry-h{-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.checks li::before{display:none!important}
+.checks li.sec{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 0 2px}
+.checks li.sec:first-child{padding-top:2px}
+.checks li{display:flex;align-items:center;gap:12px;padding:4px 0}
+.checks li span{flex:1;min-width:0;overflow-wrap:anywhere;cursor:pointer}
+.checks li.on span{color:var(--muted);text-decoration:line-through}
+.cb{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);background:none;display:grid;place-items:center;color:transparent;cursor:pointer;padding:0}
+.cb svg{width:16px;height:16px}
+.checks li.on .cb{background:var(--court);border-color:var(--court);color:#fff}
+.lst-b{cursor:default}
+.quick{display:flex;gap:8px;margin:10px 0 4px;padding:0}
+.quick input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px dashed var(--line);background:none;color:var(--ink)}
+.quick button{flex:none;width:44px;border:0;border-radius:10px;background:var(--pink);color:var(--pink-ink);font-size:1.3rem;font-weight:700;cursor:pointer}
 .logout{position:absolute;right:0;top:2px;z-index:1;border:0;border-radius:10px;padding:6px 12px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer}
 html{--sab:env(safe-area-inset-bottom,0px);background:var(--card)}
 body{min-height:100vh}
@@ -248,6 +262,7 @@ html.gap .tabs{border-bottom:0}
     <button role="tab" data-tab="antes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3 4 4.5 4 9a4 4 0 0 1-8 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 0-7.5z"/></svg>pré</button>
     <button role="tab" data-tab="despues" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.8"/><path d="M4 9.5c3 1 5 1.2 8 1.2s5-.2 8-1.2M12 10.7v4.3l-3.5 5.5M12 15l3.5 5.5"/></svg>pós</button>
     <button role="tab" data-tab="diario" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg>diário</button>
+    <button role="tab" data-tab="lista" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="5" height="5" rx="1.5"/><path d="M4.8 6.6l1 1 1.8-2"/><rect x="3.5" y="14" width="5" height="5" rx="1.5"/><path d="M12 6.5h8.5M12 16.5h8.5"/></svg>lista</button>
   </div>
 </nav>
 
@@ -292,6 +307,24 @@ html.gap .tabs{border-bottom:0}
   </form>
 </dialog>
 
+<!-- Lista -->
+<dialog id="liDlg">
+  <form id="liForm">
+    <h3 id="liTitle">Nova lista</h3>
+    <label for="fLiNome">Título</label>
+    <input type="text" id="fLiNome" placeholder="Ex.: Mala do torneio">
+    <span class="lbl">Itens</span>
+    <div class="learn" id="fLiItens"></div>
+    <button type="button" class="addline" id="addLiItem">+ outro item</button>
+    <p class="err" id="liErr"></p>
+    <div class="row">
+      <button type="button" class="btn del" id="liDel" hidden>Apagar</button>
+      <button type="button" class="btn" id="liCancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Diário -->
 <dialog id="diDlg">
   <form id="diForm">
@@ -325,7 +358,7 @@ const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth
 let user = null;
 const GRUPOS = [["rolo","Rolo"],["mobilidade","Mobilidade"],["alongamento","Alongamento"]];
 const TIPOS = { alongamento: "Alongamento", mobilidade: "Mobilidade", rolo: "Rolo" };
-let state = { exercises: [], diario: [], done: {} };
+let state = { exercises: [], diario: [], listas: [], done: {} };
 let extra = {};
 let tab = "despues";
 const openGroups = new Set();
@@ -346,14 +379,19 @@ const ytId = u => { const m = (u || "").match(/(?:youtu\.be\/|youtube\.com\/(?:w
 /* ---------- Dados ---------- */
 function normalize(s) {
   s = s || {};
-  const { exercises, diario, done, ...rest } = s;
+  const { exercises, diario, done, listas, ...rest } = s;
   extra = rest;
+  let ls = Array.isArray(listas) ? listas : null;
+  if (!ls) { // primeira vez: a lista antiga das vitaminas vira uma lista com caixinhas
+    ls = (Array.isArray(rest.items) ? rest.items : []).map(it => ({ id: uid(), titulo: it.texto || "lista",
+      itens: String(it.nota || "").split("\n").map(t => t.trim()).filter(Boolean).map(t => ({ id: uid(), texto: t, feito: false })) }));
+  }
   const d = done || {};
   const ex = Array.isArray(exercises) ? exercises.filter(e => e.sec === "antes" || e.sec === "despues") : [];
   ex.forEach(e => { if (!Array.isArray(e.alts)) e.alts = []; });
-  return { exercises: ex, diario: Array.isArray(diario) ? diario : [], done: d[TODAY] ? { [TODAY]: d[TODAY] } : {} };
+  return { exercises: ex, diario: Array.isArray(diario) ? diario : [], listas: ls, done: d[TODAY] ? { [TODAY]: d[TODAY] } : {} };
 }
-const payload = () => ({ ...extra, exercises: state.exercises, diario: state.diario, done: state.done });
+const payload = () => ({ ...extra, exercises: state.exercises, diario: state.diario, listas: state.listas, done: state.done });
 function loadLocal() { try { const r = localStorage.getItem(LS_KEY); if (r) { state = normalize(JSON.parse(r)); return true; } } catch {} return false; }
 function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(payload())); } catch {} }
 const pending = v => { try { if (v === undefined) return localStorage.getItem(LS_PENDING) === "1"; v ? localStorage.setItem(LS_PENDING, "1") : localStorage.removeItem(LS_PENDING); } catch {} return false; };
@@ -504,10 +542,17 @@ $("#q").addEventListener("input", e => { q = e.target.value; renderDiario(); });
 function render() {
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
   const list = $("#list");
-  $("#addBtn").textContent = tab === "diario" ? "+ registro" : "+ exercício";
+  $("#addBtn").textContent = tab === "diario" ? "+ registro" : tab === "lista" ? "+ lista" : "+ exercício";
   $("#heroSub").textContent = tab === "diario" ? `diário de jogos · ${state.diario.length} ${state.diario.length === 1 ? "registro" : "registros"}` : `${tab === "antes" ? "pré" : "pós"}-treino · ${exOfTab().length} ${exOfTab().length === 1 ? "exercício" : "exercícios"}`;
 
   $("#searchBox").hidden = tab !== "diario" || !state.diario.length;
+  if (tab === "lista") {
+    $("#addBtn").hidden = false;
+    $("#progress").hidden = true;
+    $("#heroSub").textContent = `listas · ${state.listas.length} ${state.listas.length === 1 ? "lista" : "listas"}`;
+    renderListas();
+    return;
+  }
   if (tab === "diario") {
     $("#addBtn").hidden = false;
     $("#progress").hidden = true;
@@ -560,7 +605,7 @@ function render() {
 
 /* ---------- Eventos ---------- */
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); window.scrollTo(0, 0); });
-$("#addBtn").onclick = () => tab === "diario" ? openDi(null) : openEx(null);
+$("#addBtn").onclick = () => tab === "diario" ? openDi(null) : tab === "lista" ? openLi(null) : openEx(null);
 
 function currentSlide(card) {
   const sc = card.querySelector("[data-slides]");
@@ -569,6 +614,7 @@ function currentSlide(card) {
 }
 
 $("#list").onclick = e => {
+  if (tab === "lista") return;
   const dt = e.target.closest("[data-ditoggle]");
   const dtap = dt || e.target.closest(".entry-b");
   if (dtap) {
@@ -710,6 +756,89 @@ $("#exForm").onsubmit = async ev => {
   finally { saving = false; sb.disabled = false; sb.textContent = "Salvar"; }
 };
 
+/* ---------- Listas ---------- */
+const openListas = new Set();
+const boxSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function renderListas() {
+  const list = $("#list");
+  if (!state.listas.length) { list.innerHTML = `<li class="empty"><b>Nenhuma lista ainda</b>Toque em «+ lista» para criar uma, com título e itens para marcar.</li>`; return; }
+  list.innerHTML = state.listas.map(l => {
+    const isSec = i => /:\s*$/.test(i.texto);
+    const marcaveis = l.itens.filter(i => !isSec(i));
+    const open = openListas.has(l.id), feitos = marcaveis.filter(i => i.feito).length;
+    return `<li class="entry lst ${open ? "open" : ""}" data-li="${l.id}">
+      <button class="entry-h" data-litoggle aria-expanded="${open}">
+        <span class="t"><b>${esc(l.titulo)}</b></span>
+        ${marcaveis.length ? `<em>${feitos}/${marcaveis.length}</em>` : ""}
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      ${open ? `<div class="entry-b lst-b">
+        <ul class="checks">${l.itens.map(i => isSec(i) ? `<li class="sec">${esc(i.texto.replace(/:\s*$/, ""))}</li>` : `<li class="${i.feito ? "on" : ""}"><button class="cb" data-check="${i.id}" aria-pressed="${i.feito}" aria-label="${i.feito ? "Desmarcar" : "Marcar"}">${boxSvg}</button><span data-check="${i.id}">${esc(i.texto)}</span></li>`).join("")}</ul>
+        <form class="quick" data-quick><input type="text" placeholder="Adicionar item" aria-label="Novo item" enterkeyhint="done"><button type="submit" aria-label="Adicionar">+</button></form>
+        ${feitos ? `<button class="linkbtn" data-liclear>desmarcar tudo</button>` : ""}
+      </div>` : ""}
+    </li>`;
+  }).join("");
+}
+$("#list").addEventListener("submit", e => {
+  const f = e.target.closest("[data-quick]"); if (!f) return;
+  e.preventDefault();
+  const inp = f.querySelector("input"), t = inp.value.trim(); if (!t) return;
+  const l = state.listas.find(x => x.id === f.closest("[data-li]").dataset.li);
+  l.itens.push({ id: uid(), texto: t, feito: false }); save(); renderListas(); render();
+  const again = $(`[data-li="${l.id}"] [data-quick] input`); if (again) again.focus();
+});
+$("#list").addEventListener("click", e => {
+  const li = e.target.closest("[data-li]"); if (!li || tab !== "lista") return;
+  const l = state.listas.find(x => x.id === li.dataset.li); if (!l) return;
+  const c = e.target.closest("[data-check]");
+  if (c) { const it = l.itens.find(i => i.id === c.dataset.check); it.feito = !it.feito; save(); render(); return; }
+  if (e.target.closest("[data-liclear]")) { l.itens.forEach(i => i.feito = false); save(); render(); return; }
+  const h = e.target.closest("[data-litoggle]");
+  if (!h) return;
+  const now = Date.now();
+  if (lastTap.id === "li:" + l.id && now - lastTap.t < 350) { clearTimeout(tapTimer); lastTap = { id: null, t: 0 }; openLi(l); return; }
+  lastTap = { id: "li:" + l.id, t: now };
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { openListas.has(l.id) ? openListas.delete(l.id) : openListas.add(l.id); render(); }, 300);
+});
+let editLi = null;
+function addLiLine(v = "", feito = false, id = "") {
+  const d = document.createElement("div"); d.className = "ln";
+  d.innerHTML = `<input type="text" placeholder="Ex.: Raquete reserva" aria-label="Item"><button type="button" aria-label="Tirar">×</button>`;
+  const inp = d.querySelector("input"); inp.value = v; inp.dataset.feito = feito ? "1" : ""; inp.dataset.id = id;
+  d.querySelector("button").onclick = () => { d.remove(); if (!$("#fLiItens").children.length) addLiLine(); };
+  $("#fLiItens").appendChild(d);
+  return inp;
+}
+$("#addLiItem").onclick = () => addLiLine().focus();
+function openLi(l) {
+  editLi = l ? l.id : null;
+  $("#liTitle").textContent = l ? "Editar lista" : "Nova lista";
+  $("#fLiNome").value = l?.titulo || "";
+  $("#fLiItens").innerHTML = "";
+  (l?.itens?.length ? l.itens : [{}]).forEach(i => addLiLine(i.texto || "", i.feito, i.id || ""));
+  $("#liErr").textContent = ""; $("#liDel").hidden = !l;
+  $("#liDlg").showModal();
+}
+$("#liCancel").onclick = () => $("#liDlg").close();
+$("#liDel").onclick = () => {
+  const b = $("#liDel");
+  if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Apagar mesmo?"; return; }
+  state.listas = state.listas.filter(x => x.id !== editLi); save(); render(); $("#liDlg").close();
+};
+$("#liDlg").addEventListener("close", () => { $("#liDel").dataset.sure = ""; $("#liDel").textContent = "Apagar"; });
+$("#liForm").onsubmit = e => {
+  e.preventDefault();
+  const titulo = $("#fLiNome").value.trim();
+  if (!titulo) { $("#liErr").textContent = "Escreva o título da lista."; return; }
+  const itens = [...$("#fLiItens").querySelectorAll("input")].map(i => ({ id: i.dataset.id || uid(), texto: i.value.trim(), feito: i.dataset.feito === "1" })).filter(i => i.texto);
+  const l = state.listas.find(x => x.id === editLi);
+  if (l) Object.assign(l, { titulo, itens });
+  else { const n = { id: uid(), titulo, itens }; state.listas.push(n); openListas.add(n.id); }
+  save(); render(); $("#liDlg").close();
+};
+
 /* ---------- Formulário do diário ---------- */
 function addLine(v = "") {
   const d = document.createElement("div"); d.className = "ln";
@@ -763,7 +892,7 @@ $("#diForm").onsubmit = e => {
 
 /* ---------- Deslizar para trocar de aba ---------- */
 (() => {
-  const ORDER = ["antes", "despues", "diario"];
+  const ORDER = ["antes", "despues", "diario", "lista"];
   let x0 = null, y0 = null, t0 = 0;
   document.addEventListener("touchstart", e => {
     if (e.touches.length !== 1 || document.querySelector("dialog[open]") || (e.target.closest && e.target.closest("[data-slides], input, textarea, video, iframe"))) { x0 = null; return; }
@@ -790,7 +919,7 @@ async function sync() {
     if (error) throw error;
     if (data && data.data) { state = normalize(data.data); saveLocal(); render(); setStatus(""); }
     else {
-      if (!state.exercises.length && !state.diario.length) { state = normalize(JSON.parse(JSON.stringify(SEED))); render(); }
+      if (!state.exercises.length && !state.diario.length && !state.listas.length) { state = normalize(JSON.parse(JSON.stringify(SEED))); render(); }
       save();
     }
   } catch { setStatus(navigator.onLine ? "Não deu para carregar da nuvem. Mostrando o que está no celular." : "Sem internet. Mostrando o que está no celular."); }
