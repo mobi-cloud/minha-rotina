@@ -1,5 +1,5 @@
 // Guarda o app no celular para abrir mesmo sem internet.
-const CACHE = "minha-rotina-v5";
+const CACHE = "minha-rotina-v6";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

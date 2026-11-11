@@ -185,6 +185,12 @@ html,body{overscroll-behavior-y:none}
 .entry-h .chev{width:20px;height:20px;color:var(--muted);flex:none;transition:transform .2s}
 .entry.open .entry-h .chev{transform:rotate(90deg)}
 .entry-b{padding:2px 16px 8px 20px;border-top:1px solid var(--line);padding-top:12px}
+.pinrow{display:flex;align-items:flex-start;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:16px;cursor:pointer;font-weight:400}
+.pinrow input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--court);flex:none}
+.pinrow b{display:block;font-weight:700}
+.pinrow small{display:block;color:var(--muted);font-size:.85rem}
+.pinic{width:15px;height:15px;color:var(--court);margin-right:6px;vertical-align:-1px}
+.entry.pinned{border-color:var(--court)!important;border-width:1.5px!important}
 .logout{position:absolute;right:0;top:2px;z-index:1;border:0;border-radius:10px;padding:6px 12px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer}
 html{--sab:env(safe-area-inset-bottom,0px);background:var(--card)}
 body{min-height:100vh}
@@ -285,10 +291,11 @@ html.gap .tabs{border-bottom:0}
 <dialog id="diDlg">
   <form id="diForm">
     <h3 id="diTitle">Novo registro</h3>
-    <label for="fTorneio">Torneio</label>
-    <input type="text" id="fTorneio" placeholder="Ex.: Tennis Europe Barcelona">
-    <label for="fSemana">Semana</label>
+    <label for="fTorneio">Torneio ou título</label>
+    <input type="text" id="fTorneio" placeholder="Ex.: TE Vila sub-16 categoria 2">
+    <label for="fSemana">Semana ou data (opcional)</label>
     <input type="text" id="fSemana" placeholder="Ex.: 3 a 9 de novembro">
+    <label class="pinrow"><input type="checkbox" id="fFixar"><span><b>Fixar no topo</b><small>Fica sempre em primeiro, como o seu dia a dia.</small></span></label>
     <span class="lbl">O que eu aprendi</span>
     <div class="learn" id="fLearn"></div>
     <button type="button" class="addline" id="addLine">+ outra coisa</button>
@@ -462,7 +469,8 @@ function renderDiario() {
   const list = $("#list");
   if (!state.diario.length) { list.innerHTML = `<li class="empty"><b>Seu diário está vazio</b>Depois de cada torneio, anote a semana, o torneio e o que você aprendeu.</li>`; return; }
   const nq = norm(q.trim());
-  const items = [...state.diario].reverse().map(d => {
+  const ordered = [...state.diario].reverse();
+  const items = [...ordered.filter(d => d.fixado), ...ordered.filter(d => !d.fixado)].map(d => {
     if (!nq) return { d, learn: d.aprendizados || [] };
     const head = norm(d.torneio).includes(nq) || norm(d.semana).includes(nq);
     const hits = (d.aprendizados || []).filter(a => norm(a).includes(nq));
@@ -473,9 +481,9 @@ function renderDiario() {
     const open = openEntries.has(d.id) || !!nq;
     const n = (d.aprendizados || []).length;
     return `
-    <li class="entry ${open ? "open" : ""}" data-di="${d.id}">
+    <li class="entry ${open ? "open" : ""} ${d.fixado ? "pinned" : ""}" data-di="${d.id}">
       <button class="entry-h" data-ditoggle aria-expanded="${open}">
-        <span class="t"><b>${hl(d.torneio || "Sem nome")}</b>${d.semana ? `<small>${hl(d.semana)}</small>` : ""}</span>
+        <span class="t"><b>${d.fixado ? `<svg class="pinic" viewBox="0 0 24 24" fill="currentColor" aria-label="fixado"><path d="M15 3l6 6-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>` : ""}${hl(d.torneio || "Sem nome")}</b>${d.semana ? `<small>${hl(d.semana)}</small>` : ""}</span>
         ${!open && n ? `<em>${n}</em>` : ""}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
       </button>
@@ -701,6 +709,7 @@ function openDi(d) {
   $("#diTitle").textContent = d ? "Editar registro" : "Novo registro";
   $("#fTorneio").value = d?.torneio || "";
   $("#fSemana").value = d?.semana || "";
+  $("#fFixar").checked = !!d?.fixado;
   $("#fLearn").innerHTML = "";
   (d?.aprendizados?.length ? d.aprendizados : [""]).forEach(a => addLine(a));
   $("#diErr").textContent = "";
@@ -715,12 +724,12 @@ $("#diDel").onclick = () => {
 $("#diDlg").addEventListener("close", () => { $("#diDel").dataset.sure = ""; $("#diDel").textContent = "Apagar"; });
 $("#diForm").onsubmit = e => {
   e.preventDefault();
-  const torneio = $("#fTorneio").value.trim(), semana = $("#fSemana").value.trim();
+  const torneio = $("#fTorneio").value.trim(), semana = $("#fSemana").value.trim(), fixado = $("#fFixar").checked;
   const aprendizados = [...$("#fLearn").querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
-  if (!torneio && !semana) { $("#diErr").textContent = "Escreva o torneio ou a semana."; return; }
+  if (!torneio && !semana) { $("#diErr").textContent = "Escreva o torneio, um título ou a data."; return; }
   const d = state.diario.find(x => x.id === editDi);
-  if (d) Object.assign(d, { torneio, semana, aprendizados });
-  else state.diario.push({ id: uid(), torneio, semana, aprendizados });
+  if (d) Object.assign(d, { torneio, semana, aprendizados, fixado });
+  else state.diario.push({ id: uid(), torneio, semana, aprendizados, fixado });
   save(); render(); $("#diDlg").close();
 };
 
