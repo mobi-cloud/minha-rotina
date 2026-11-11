@@ -176,6 +176,15 @@ mark{background:var(--pink);color:var(--pink-ink);border-radius:3px;padding:0 2p
 .altlist li span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
 .altlist .linkbtn{font-size:.85rem}
 html,body{overscroll-behavior-y:none}
+.entry{padding:0!important;overflow:hidden}
+.entry-h{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;text-align:left;padding:15px 16px 15px 20px;cursor:pointer;color:inherit}
+.entry-h .t{flex:1;min-width:0}
+.entry-h b{display:block;font-size:1.1rem;font-weight:700;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere}
+.entry-h small{display:block;color:var(--muted);font-size:.85rem;font-weight:600;margin-top:2px}
+.entry-h em{font-style:normal;font-size:.8rem;font-weight:700;color:var(--muted);background:var(--soft);border-radius:8px;padding:2px 8px}
+.entry-h .chev{width:20px;height:20px;color:var(--muted);flex:none;transition:transform .2s}
+.entry.open .entry-h .chev{transform:rotate(90deg)}
+.entry-b{padding:2px 16px 8px 20px;border-top:1px solid var(--line);padding-top:12px}
 .logout{position:absolute;right:0;top:2px;z-index:1;border:0;border-radius:10px;padding:6px 12px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer}
 html{--sab:env(safe-area-inset-bottom,0px);background:var(--card)}
 body{min-height:100vh}
@@ -215,7 +224,7 @@ html.gap .tabs{border-bottom:0}
     <div id="progress" hidden></div>
   <div class="search" id="searchBox" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-    <input type="search" id="q" placeholder="Pesquisar torneio, semana ou aprendizado" aria-label="Pesquisar no diário" autocomplete="off">
+    <input type="search" id="q" placeholder="Pesquisar no diário" aria-label="Pesquisar no diário" autocomplete="off">
   </div>
   <ul class="list" id="list"></ul>
   <p class="status"><span id="status"></span></p>
@@ -309,6 +318,7 @@ let tab = "despues";
 const openGroups = new Set();
 let saving = false;
 const openCards = new Set();
+const openEntries = new Set();
 let lastTap = { id: null, t: 0 }, tapTimer = null;
 let q = "";
 const iso = d => { const z = new Date(d); z.setMinutes(z.getMinutes() - z.getTimezoneOffset()); return z.toISOString().slice(0, 10); };
@@ -459,13 +469,22 @@ function renderDiario() {
     return head ? { d, learn: d.aprendizados || [] } : hits.length ? { d, learn: hits } : null;
   }).filter(Boolean);
   if (!items.length) { list.innerHTML = `<li class="empty"><b>Nada encontrado</b>Nenhum registro tem «${esc(q.trim())}». Tente outra palavra.</li>`; return; }
-  list.innerHTML = items.map(({ d, learn }) => `
-    <li class="entry" data-di="${d.id}">
-      ${d.semana ? `<div class="wk">${hl(d.semana)}</div>` : ""}
-      <h2>${hl(d.torneio || "Sem nome")}</h2>
-      ${learn.length ? `<ul>${learn.map(a => `<li><span>${hl(a)}</span></li>`).join("")}</ul>` : `<p class="none">Nada anotado ainda.</p>`}
-      <div class="ex-foot"><button class="linkbtn" data-diedit>editar</button></div>
-    </li>`).join("");
+  list.innerHTML = items.map(({ d, learn }) => {
+    const open = openEntries.has(d.id) || !!nq;
+    const n = (d.aprendizados || []).length;
+    return `
+    <li class="entry ${open ? "open" : ""}" data-di="${d.id}">
+      <button class="entry-h" data-ditoggle aria-expanded="${open}">
+        <span class="t"><b>${hl(d.torneio || "Sem nome")}</b>${d.semana ? `<small>${hl(d.semana)}</small>` : ""}</span>
+        ${!open && n ? `<em>${n}</em>` : ""}
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      ${open ? `<div class="entry-b">
+        ${learn.length ? `<ul>${learn.map(a => `<li><span>${hl(a)}</span></li>`).join("")}</ul>` : `<p class="none">Nada anotado ainda.</p>`}
+        <div class="ex-foot"><button class="linkbtn" data-diedit>editar</button></div>
+      </div>` : ""}
+    </li>`;
+  }).join("");
 }
 $("#q").addEventListener("input", e => { q = e.target.value; renderDiario(); });
 
@@ -537,6 +556,8 @@ function currentSlide(card) {
 }
 
 $("#list").onclick = e => {
+  const dt = e.target.closest("[data-ditoggle]");
+  if (dt) { const id = dt.closest("[data-di]").dataset.di; openEntries.has(id) ? openEntries.delete(id) : openEntries.add(id); renderDiario(); return; }
   if (e.target.closest("[data-diedit]")) { const id = e.target.closest("[data-di]").dataset.di; openDi(state.diario.find(d => d.id === id)); return; }
   const g = e.target.closest("[data-group]");
   if (g) { const k = g.dataset.group; openGroups.has(k) ? openGroups.delete(k) : openGroups.add(k); render(); return; }
