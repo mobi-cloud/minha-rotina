@@ -86,8 +86,8 @@ h1{margin:0;font-family:var(--display);font-size:clamp(2.6rem,12vw,3.4rem);font-
 .empty b{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:6px}
 
 /* Botão e abas embaixo */
-.add{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(92px + env(safe-area-inset-bottom,0px));border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:1rem;background:var(--pink);color:var(--pink-ink);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.16);white-space:nowrap;z-index:6}
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+.add{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(92px + env(safe-area-inset-bottom,0px) - var(--gap,0px));border:0;border-radius:14px;padding:14px 22px;font-weight:700;font-size:1rem;background:var(--pink);color:var(--pink-ink);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.16);white-space:nowrap;z-index:6}
+.tabs{position:fixed;left:0;right:0;bottom:calc(-1 * var(--gap,0px));z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px))}
 .tabs-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
 .tabs button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.82rem;font-weight:600;padding:6px 0;cursor:pointer}
 .tabs svg{width:25px;height:25px}
@@ -176,6 +176,7 @@ mark{background:var(--pink);color:var(--pink-ink);border-radius:3px;padding:0 2p
 .altlist li span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
 .altlist .linkbtn{font-size:.85rem}
 html,body{overscroll-behavior-y:none}
+.tabs::after{content:"";position:absolute;left:0;right:0;top:100%;height:120px;background:var(--card)}
 .login{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;overflow:auto}
 .login .hero{padding-bottom:40px}
 .login form{max-width:420px;width:100%;margin:0 auto;padding:28px 20px}
@@ -765,6 +766,18 @@ loadLocal(); render();
   user = session.user;
   await sync();
 })();
+/* iPhone: no modo app, a tela às vezes fica mais curta que o aparelho e sobra um espaço embaixo das abas */
+function fixGap() {
+  const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+  let g = 0;
+  if (standalone) {
+    const full = innerHeight > innerWidth ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
+    g = full - innerHeight;
+    if (g < 0 || g > 80) g = 0;
+  }
+  document.documentElement.style.setProperty("--gap", g + "px");
+}
+fixGap(); addEventListener("resize", fixGap); addEventListener("orientationchange", () => setTimeout(fixGap, 300));
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 })();
 </script>
